@@ -134,6 +134,21 @@ public class GameManager : MonoBehaviour
     public AudioSource fanSource;
     [Range(0f, 1f)] public float fanMinVolume = 0f;
     [Range(0f, 1f)] public float fanMaxVolume = 1f;
+
+    // ---------- MUSIC & AMBIENCE ----------
+    [Header("Music & Ambience")]
+    [Tooltip("Looping background track")]
+    public AudioSource musicSource;
+
+    [Tooltip("Looping nature ambience")]
+    public AudioSource ambienceSource;
+
+    [Tooltip("How long to pitch+volume fade music on game over")]
+    public float musicFadeOutDuration = 1.5f;
+
+    [Tooltip("How long to pitch+volume fade ambience on game over")]
+    public float ambienceFadeOutDuration = 1.5f;
+
     //----- EXPLOSION -----
 
 
@@ -241,6 +256,24 @@ public class GameManager : MonoBehaviour
             if (fanSource.clip != null && !fanSource.isPlaying)
                 fanSource.Play();
             fanSource.volume = fanMinVolume;
+        }
+
+        // >>> ADD THIS <<<
+        if (musicSource != null)
+        {
+            musicSource.loop = true;
+            // start clean every run
+            musicSource.pitch = 1f;
+            if (!musicSource.isPlaying)
+                musicSource.Play();
+        }
+
+        if (ambienceSource != null)
+        {
+            ambienceSource.loop = true;
+            ambienceSource.pitch = 1f;
+            if (!ambienceSource.isPlaying)
+                ambienceSource.Play();
         }
 
         RebuildAdTypeLists();
@@ -836,6 +869,14 @@ public class GameManager : MonoBehaviour
             StartCoroutine(FadeAudioOut(fanSource, fanFadeOutDuration));
         }
 
+            // vinyl-stop fade for music and ambience
+        if (musicSource != null && musicFadeOutDuration > 0f)
+            StartCoroutine(FadeOutPitchAndVolume(musicSource, musicFadeOutDuration));
+
+        if (ambienceSource != null && ambienceFadeOutDuration > 0f)
+            StartCoroutine(FadeOutPitchAndVolume(ambienceSource, ambienceFadeOutDuration));
+
+
         // 2) explosion flash + heavy shake + explosion SFX
         if (explosionOverlay != null)
         {
@@ -974,6 +1015,31 @@ public class GameManager : MonoBehaviour
         src.volume = 0f;
         src.Stop();
     }
+
+    IEnumerator FadeOutPitchAndVolume(AudioSource src, float duration)
+    {
+        if (src == null || duration <= 0f) yield break;
+
+        float startVol   = src.volume;
+        float startPitch = src.pitch;
+        float t = 0f;
+
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / duration);
+
+            src.volume = Mathf.Lerp(startVol,   0f, k);
+            src.pitch  = Mathf.Lerp(startPitch, 0f, k);
+
+            yield return null;
+        }
+
+        src.volume = 0f;
+        src.pitch  = 0f;
+        src.Stop();
+    }
+
 
 
     public void Restart()
