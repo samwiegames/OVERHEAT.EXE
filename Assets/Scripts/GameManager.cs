@@ -149,6 +149,19 @@ public class GameManager : MonoBehaviour
     int lastSpawnSfxFrame = -1;
     int spawnSfxPlayedThisFrame = 0;
 
+    // ---------- POWERUP AUDIO ----------
+    [Header("Powerup Audio")]
+    [Tooltip("AudioSource used to play powerup sounds (one-shot)")]
+    public AudioSource powerupSfxSource;
+
+    public AudioClip powerupCoolClip;    // for COOL (1)
+    public AudioClip powerupFreezeClip;  // for FREEZE (2)
+    public AudioClip powerupClearClip;   // for CLEAR ALL (3)
+
+    [Range(0f, 1f)]
+    public float powerupVolume = 0.8f;
+
+
 
     // ---------- MUSIC & AMBIENCE ----------
     [Header("Music & Ambience")]
@@ -746,6 +759,15 @@ public class GameManager : MonoBehaviour
         spawnSfxPlayedThisFrame++;
     }
 
+    void PlayPowerupSfx(AudioClip clip)
+    {
+        if (powerupSfxSource == null) return;
+        if (clip == null) return;
+
+        powerupSfxSource.PlayOneShot(clip, powerupVolume);
+    }
+
+
 
     public void PlayAdCloseSfx()
     {
@@ -846,7 +868,11 @@ public class GameManager : MonoBehaviour
         freezeTimer = Mathf.Max(freezeTimer, duration);
         ShowPowerupFreezeText();
         UpdateTempUI();
+
+        // play freeze SFX
+        PlayPowerupSfx(powerupFreezeClip);
     }
+
 
     public void ApplyCoolPowerup(float amount)
     {
@@ -854,7 +880,11 @@ public class GameManager : MonoBehaviour
         temp = Mathf.Clamp(temp, 0f, tempMax);
         UpdateTempUI();
         ShowPowerupCoolingText();
+
+        // play cool SFX
+        PlayPowerupSfx(powerupCoolClip);
     }
+
 
     public void ApplyClearAllPowerup()
     {
@@ -875,7 +905,11 @@ public class GameManager : MonoBehaviour
 
         UpdateTempUI();
         ShowPowerupClearText();
+
+        // play clear-all SFX
+        PlayPowerupSfx(powerupClearClip);
     }
+
 
     // ================== GAME OVER ==================
 
