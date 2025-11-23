@@ -79,15 +79,13 @@ public class MainMenuController : MonoBehaviour
 
     public void OnStartClicked()
     {
-        if (string.IsNullOrEmpty(gameSceneName))
-        {
-            Debug.LogError("MainMenuController: gameSceneName is empty.");
-            return;
-        }
-
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(gameSceneName);
+        Time.timeScale = 1f;  // just in case
+        if (SceneFader.Instance != null)
+            SceneFader.Instance.FadeToScene(gameSceneName);
+        else
+            UnityEngine.SceneManagement.SceneManager.LoadScene(gameSceneName);
     }
+
 
     public void OnInstructionsClicked()
     {
@@ -109,12 +107,18 @@ public class MainMenuController : MonoBehaviour
 
     public void OnQuitClicked()
     {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+        if (SceneFader.Instance != null)
+            SceneFader.Instance.FadeAndQuit();
+        else
+        {
+    #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+    #else
+            Application.Quit();
+    #endif
+        }
     }
+
 
     // ------------- COROUTINES -------------
 

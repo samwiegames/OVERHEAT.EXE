@@ -1235,7 +1235,11 @@ public class GameManager : MonoBehaviour
     public void Menu()
     {
         Time.timeScale = 1f;   // unfreeze
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+
+        if (SceneFader.Instance != null)
+            SceneFader.Instance.FadeToScene("MainMenu");
+        else
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
 
 
@@ -1243,7 +1247,11 @@ public class GameManager : MonoBehaviour
     public void Restart()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
+        if (SceneFader.Instance != null)
+            SceneFader.Instance.FadeRestartCurrent();
+        else
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     // ================== UTILS ==================
