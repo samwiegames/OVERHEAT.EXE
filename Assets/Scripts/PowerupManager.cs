@@ -102,13 +102,23 @@ public class PowerupManager : MonoBehaviour
 
     void ApplyPowerup(string name)
     {
+        if (GameManager.Instance == null) return;
+
         if (name.Contains("Freeze"))
-            GameManager.Instance.StartCoroutine(GameManager.Instance.DoFreeze());
-
+        {
+            // freeze temperature for 6 seconds
+            GameManager.Instance.ApplyFreezePowerup(6f);
+        }
         else if (name.Contains("Cool"))
-            GameManager.Instance.ChangeTemperature(-20f);
-
+        {
+            // instantly cool by 18 degrees (tweak if you want)
+            GameManager.Instance.ApplyCoolPowerup(18f);
+        }
         else if (name.Contains("Clear"))
-            GameManager.Instance.DoClearAds();
+        {
+            // clear all ads + reset difficulty
+            GameManager.Instance.ApplyClearAllPowerup();
+        }
     }
+
 }

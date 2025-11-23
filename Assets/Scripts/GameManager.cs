@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 
@@ -9,12 +10,12 @@ public class GameManager : MonoBehaviour
 
     // ---------- UI AREAS ----------
     [Header("UI Areas")]
-    public RectTransform popupArea;   // assign PopupArea
-    public RectTransform canvasRect;  // assign Canvas
+    public RectTransform popupArea;
+    public RectTransform canvasRect;
 
     // ---------- AD PREFABS ----------
     [Header("Ad Prefabs")]
-    public List<GameObject> adPrefabs = new List<GameObject>();  // drag all 5 here
+    public List<GameObject> adPrefabs = new List<GameObject>();
 
     // ---------- TIMER UI ----------
     [Header("Timer UI")]
@@ -27,11 +28,11 @@ public class GameManager : MonoBehaviour
     public float tempMax = 100f;
     public float baseTempIncreasePerSecond = 1.5f;
     public float tempPerOpenAd = 0.15f;
-    public float tempOnAdClose = -1f;   // negative = cools when you close
+    public float tempOnAdClose = -1f;
 
     [Header("Temperature UI")]
-    public TemperatureBar tempBar;      // our custom bar
-    public TMP_Text tempValueText;      // shows °F
+    public TemperatureBar tempBar;
+    public TMP_Text tempValueText;
 
     // ---------- SPAWNING ----------
     [Header("Spawning")]
@@ -45,7 +46,38 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public TMP_Text gameOverText;
 
-    // internal state
+    // ---------- POWERUPS ----------
+    [Header("Powerup Settings")]
+    public float freezeDurationSeconds = 6f;
+    public float coolAmount = 18f;       // °C reduction
+    public float clearAllTempBonus = 0f; // optional cooling when clearing all
+
+    bool tempFrozen = false;
+    float freezeTimer = 0f;
+
+    // ---------- HEAT VFX ----------
+    [Header("Heat Visuals")]
+    public Image heatOverlay;           // red full-screen image
+    public RectTransform shakeRoot;     // UIRoot
+    [Range(0f, 1f)] public float shakeStartNormalized = 0.6f;
+    public float shakeMaxAmplitude = 12f;
+    [Range(0f, 1f)] public float overlayMaxAlpha = 0.45f;
+
+    Vector2 shakeBasePos;
+
+    // ---------- AUDIO ----------
+    [Header("Audio")]
+    [Tooltip("AudioSource with NO clip, PlayOnAwake OFF, Loop OFF")]
+    public AudioSource virusSfxSource;          // plays one-shot virus sounds
+    [Tooltip("3+ different virus spawn clips")]
+    public List<AudioClip> virusSpawnClips;     // random per spawn
+
+    [Tooltip("AudioSource with pcFanLoop clip, PlayOnAwake ON, Loop ON")]
+    public AudioSource fanSource;               // looping fan hum
+    [Range(0f, 1f)] public float fanMinVolume = 0f;
+    [Range(0f, 1f)] public float fanMaxVolume = 1f;
+
+    // ---------- INTERNAL STATE ----------
     List<AdPopup> activeAds = new List<AdPopup>();
     float elapsedTime = 0f;
     float spawnDifficultyTime = 0f;
@@ -77,6 +109,18 @@ public class GameManager : MonoBehaviour
         if (bestText != null)
             bestText.text = "best: " + FormatTime(best);
 
+        // base position for shaking
+        if (shakeRoot != null)
+            shakeBasePos = shakeRoot.anchoredPosition;
+
+        // fan setup
+        if (fanSource != null)
+        {
+            if (fanSource.clip != null && !fanSource.isPlaying)
+                fanSource.Play();
+            fanSource.volume = fanMinVolume;
+        }
+
         UpdateTempUI();
     }
 
@@ -95,7 +139,7 @@ public class GameManager : MonoBehaviour
         HandleTemperature(dt);
     }
 
-    // ========== SPAWNING ==========
+    // ================== SPAWNING ==================
 
     void HandleSpawning(float dt)
     {
@@ -110,7 +154,7 @@ public class GameManager : MonoBehaviour
         if (spawnTimer >= currentInterval)
         {
             spawnTimer = 0f;
-            SpawnPopup();
+            SpawnPopup();     // generic spawn (can be normal / bomb / cascade)
         }
     }
 
@@ -121,6 +165,12 @@ public class GameManager : MonoBehaviour
         int index = Random.Range(0, adPrefabs.Count);
         GameObject prefab = adPrefabs[index];
 
+        SpawnPopupFromPrefab(prefab);
+    }
+
+    // common instantiate logic
+    void SpawnPopupFromPrefab(GameObject prefab)
+    {
         GameObject go = Instantiate(prefab, popupArea);
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.localScale = Vector3.one;
@@ -131,6 +181,35 @@ public class GameManager : MonoBehaviour
         AdPopup popup = go.GetComponent<AdPopup>();
         if (popup != null)
             activeAds.Add(popup);
+
+        PlayVirusSpawnSfx();
+    }
+
+    // spawn N normal ads (used by cascade)
+    public void SpawnMultipleNormalAds(int count)
+    {
+        List<GameObject> normalPrefabs = new List<GameObject>();
+
+        foreach (var prefab in adPrefabs)
+        {
+            AdPopup p = prefab.GetComponent<AdPopup>();
+            if (p != null && p.adType == AdPopup.AdType.Normal)
+                normalPrefabs.Add(prefab);
+        }
+
+        if (normalPrefabs.Count == 0)
+        {
+            // fallback: just use all
+            for (int i = 0; i < count; i++)
+                SpawnPopup();
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject choice = normalPrefabs[Random.Range(0, normalPrefabs.Count)];
+            SpawnPopupFromPrefab(choice);
+        }
     }
 
     Vector2 RandomInsidePopupArea(RectTransform popupRt)
@@ -169,25 +248,69 @@ public class GameManager : MonoBehaviour
         popupRt.anchoredPosition = pos;
     }
 
-    // called by AdPopup
+    // ================== POPUP CALLBACKS ==================
+
+    // normal safe ad closed by player
     public void OnPopupClosed(AdPopup popup)
     {
         if (activeAds.Contains(popup))
             activeAds.Remove(popup);
 
-        temp += tempOnAdClose;
+        temp += tempOnAdClose;              // cooling reward
         temp = Mathf.Clamp(temp, 0f, tempMax);
         UpdateTempUI();
     }
 
-    // ========== TEMPERATURE ==========
+    // bomb ad clicked by player
+    public void OnBombAdClicked(AdPopup popup)
+    {
+        if (activeAds.Contains(popup))
+            activeAds.Remove(popup);
+
+        TriggerGameOver("you clicked a malware bomb ad!");
+    }
+
+    // cascade ad closed by player
+    public void OnCascadeAdClosed(AdPopup popup)
+    {
+        if (activeAds.Contains(popup))
+            activeAds.Remove(popup);
+
+        // still give some cooling for closing it
+        temp += tempOnAdClose;
+        temp = Mathf.Clamp(temp, 0f, tempMax);
+        UpdateTempUI();
+
+        int extraCount = Random.Range(5, 16);   // 5 to 15
+        SpawnMultipleNormalAds(extraCount);
+    }
+
+    // auto-despawned (bomb/cascade you avoided)
+    public void OnAdAutoDespawn(AdPopup popup)
+    {
+        if (activeAds.Contains(popup))
+            activeAds.Remove(popup);
+        // no temp change
+    }
+
+    // ================== TEMPERATURE ==================
 
     void HandleTemperature(float dt)
     {
-        // temperature rises over time
-        float inc = baseTempIncreasePerSecond * dt;
+        if (tempFrozen)
+        {
+            freezeTimer -= dt;
+            if (freezeTimer <= 0f)
+            {
+                freezeTimer = 0f;
+                tempFrozen = false;
+            }
 
-        // plus extra heat per open ad
+            UpdateTempUI();
+            return;
+        }
+
+        float inc = baseTempIncreasePerSecond * dt;
         inc += activeAds.Count * tempPerOpenAd * dt;
 
         temp += inc;
@@ -213,9 +336,90 @@ public class GameManager : MonoBehaviour
             float f = temp * 9f / 5f + 32f;
             tempValueText.text = Mathf.RoundToInt(f) + "°F";
         }
+
+        UpdateHeatVFX(tNorm);
     }
 
-    // ========== GAME OVER ==========
+    void UpdateHeatVFX(float tNorm)
+    {
+        float heat01 = Mathf.InverseLerp(shakeStartNormalized, 1f, tNorm);
+        heat01 = Mathf.Clamp01(heat01);
+
+        // red tint
+        if (heatOverlay != null)
+        {
+            Color c = heatOverlay.color;
+            c.a = overlayMaxAlpha * heat01;
+            heatOverlay.color = c;
+        }
+
+        // shake
+        if (shakeRoot != null)
+        {
+            Vector2 randomOffset = Random.insideUnitCircle * (shakeMaxAmplitude * heat01);
+            shakeRoot.anchoredPosition = shakeBasePos + randomOffset;
+        }
+
+        // fan volume
+        UpdateFanVolume(heat01);
+    }
+
+    // ================== AUDIO HELPERS ==================
+
+    void PlayVirusSpawnSfx()
+    {
+        if (virusSfxSource == null) return;
+        if (virusSpawnClips == null || virusSpawnClips.Count == 0) return;
+
+        int index = Random.Range(0, virusSpawnClips.Count);
+        AudioClip chosen = virusSpawnClips[index];
+        if (chosen != null)
+            virusSfxSource.PlayOneShot(chosen);
+    }
+
+    void UpdateFanVolume(float heat01)
+    {
+        if (fanSource == null) return;
+        fanSource.volume = Mathf.Lerp(fanMinVolume, fanMaxVolume, heat01);
+    }
+
+    // ================== POWERUP API ==================
+
+    public void ApplyFreezePowerup(float duration)
+    {
+        tempFrozen = true;
+        freezeTimer = Mathf.Max(freezeTimer, duration);
+    }
+
+    public void ApplyCoolPowerup(float amount)
+    {
+        temp -= amount;
+        temp = Mathf.Clamp(temp, 0f, tempMax);
+        UpdateTempUI();
+    }
+
+    public void ApplyClearAllPowerup()
+    {
+        foreach (var ad in activeAds)
+        {
+            if (ad != null)
+                Destroy(ad.gameObject);
+        }
+        activeAds.Clear();
+
+        spawnDifficultyTime = 0f;
+        spawnTimer = 0f;
+
+        if (clearAllTempBonus > 0f)
+        {
+            temp -= clearAllTempBonus;
+            temp = Mathf.Clamp(temp, 0f, tempMax);
+        }
+
+        UpdateTempUI();
+    }
+
+    // ================== GAME OVER ==================
 
     void TriggerGameOver(string reason)
     {
@@ -244,33 +448,7 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-        // --- POWERUP EFFECTS ---
-
-    public void ChangeTemperature(float delta)
-    {
-        temp += delta;
-        temp = Mathf.Clamp(temp, 0f, tempMax);
-        UpdateTempUI();
-    }
-
-    public System.Collections.IEnumerator DoFreeze()
-    {
-        float original = baseTempIncreasePerSecond;
-        baseTempIncreasePerSecond = 0f;
-        yield return new WaitForSeconds(6f);
-        baseTempIncreasePerSecond = original;
-    }
-
-    public void DoClearAds()
-    {
-        foreach (var p in activeAds)
-            Destroy(p.gameObject);
-        activeAds.Clear();
-
-        // reset difficulty ramp too
-        spawnDifficultyTime = 0f;
-    }
-
+    // ================== UTILS ==================
 
     string FormatTime(float t)
     {
@@ -280,5 +458,3 @@ public class GameManager : MonoBehaviour
         return m.ToString("00") + ":" + sec.ToString("00");
     }
 }
-
-
