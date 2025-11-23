@@ -58,7 +58,19 @@ public class GameManager : MonoBehaviour
     // ---------- GAME OVER ----------
     [Header("Game Over")]
     public GameObject gameOverPanel;
-    public TMP_Text gameOverText;
+
+    // optional: keep this if you’re still using it somewhere, otherwise you can remove
+    public TMP_Text gameOverText; 
+
+    [Tooltip("Main title text: e.g. 'your pc overheated!'")]
+    public TMP_Text gameOverTitleText;
+
+    [Tooltip("Secondary text: e.g. 'survived: 00:20'")]
+    public TMP_Text gameOverSurvivedText;
+
+    [Tooltip("Restart button that breathes on game over")]
+    public Button restartButton;
+
 
     // ---------- POWERUP SETTINGS ----------
     [Header("Powerup Effects")]
@@ -169,11 +181,20 @@ public class GameManager : MonoBehaviour
     [Header("Game Over Fade")]
     public float gameOverTextFadeDuration = 1.2f;
 
-    // hover vars for game over text
+    // hover vars for game over texts + button
     float gameOverHoverTimer = 0f;
-    Vector2 gameOverBasePos;
+    Vector2 gameOverTitleBasePos;
+    Vector2 gameOverSurvivedBasePos;
+    Vector3 restartBaseScale;
+
+    [Tooltip("How far the texts bob up/down")]
     public float gameOverHoverAmplitude = 8f;
+
+    [Tooltip("Speed of the hovering motion")]
     public float gameOverHoverSpeed = 1.5f;
+
+    [Tooltip("Max extra scale for restart button breathing")]
+    public float restartBreathAmount = 0.08f;
 
 
     void Awake()
@@ -278,15 +299,43 @@ public class GameManager : MonoBehaviour
     // -------- hover animation for game over text --------
     void HoverGameOverText()
     {
-        if (gameOverText == null) return;
+        // nothing to animate
+        if (gameOverTitleText == null && gameOverSurvivedText == null && restartButton == null)
+            return;
 
         gameOverHoverTimer += Time.unscaledDeltaTime * gameOverHoverSpeed;
-        float offsetY = Mathf.Sin(gameOverHoverTimer) * gameOverHoverAmplitude;
+        float s = gameOverHoverTimer;
 
-        RectTransform rt = gameOverText.rectTransform;
-        rt.anchoredPosition = new Vector2(gameOverBasePos.x,
-                                          gameOverBasePos.y + offsetY);
+        // title: simple sine hover
+        if (gameOverTitleText != null)
+        {
+            float offsetY = Mathf.Sin(s) * gameOverHoverAmplitude;
+            RectTransform rt = gameOverTitleText.rectTransform;
+            rt.anchoredPosition = new Vector2(
+                gameOverTitleBasePos.x,
+                gameOverTitleBasePos.y + offsetY
+            );
+        }
+
+        // survived line: smaller amplitude + phase shift so it doesn’t move identically
+        if (gameOverSurvivedText != null)
+        {
+            float offsetY = Mathf.Sin(s + 0.8f) * (gameOverHoverAmplitude * 0.6f);
+            RectTransform rt = gameOverSurvivedText.rectTransform;
+            rt.anchoredPosition = new Vector2(
+                gameOverSurvivedBasePos.x,
+                gameOverSurvivedBasePos.y + offsetY
+            );
+        }
+
+        // restart button: breathing scale
+        if (restartButton != null)
+        {
+            float breath = 1f + Mathf.Sin(s * 2f) * restartBreathAmount;
+            restartButton.transform.localScale = restartBaseScale * breath;
+        }
     }
+
 
     // ================== SPAWNING ==================
 
@@ -852,13 +901,44 @@ public class GameManager : MonoBehaviour
             goCg.alpha = 0f;
         }
 
-        if (gameOverText != null)
+        // set texts separately
+        // set texts separately
+        if (gameOverTitleText != null)
         {
-            gameOverText.text = reason + "\n\nsurvived: " + FormatTime(elapsedTime);
-            // store base pos for hover
-            gameOverBasePos = gameOverText.rectTransform.anchoredPosition;
-            gameOverHoverTimer = 0f;
+            gameOverTitleText.text = reason;
+            var rt = gameOverTitleText.rectTransform;
+            gameOverTitleBasePos = rt.anchoredPosition + new Vector2(0f, 70f);
         }
+
+        if (gameOverSurvivedText != null)
+        {
+            gameOverSurvivedText.text = "survived: " + FormatTime(elapsedTime);
+            var rt = gameOverSurvivedText.rectTransform;
+            gameOverSurvivedBasePos = rt.anchoredPosition + new Vector2(0f, -30f);
+        }
+
+
+        // make sure restart button is active and cache its base scale for breathing
+        // ---- RESTART BUTTON FIX (explicit position + always visible) ----
+        if (restartButton != null)
+        {
+            restartButton.gameObject.SetActive(true);
+
+            // force position so it never overlaps the text again
+            RectTransform rt = restartButton.GetComponent<RectTransform>();
+            if (rt != null)
+                rt.anchoredPosition = new Vector2(0f, -200f);   // <<< adjust height here
+
+            // make sure scale is correct (fixes case where it's invisible)
+            if (restartButton.transform.localScale == Vector3.zero)
+                restartButton.transform.localScale = Vector3.one;
+
+            // update breathing effect baseline
+            restartBaseScale = restartButton.transform.localScale;
+        }
+
+
+
 
         t = 0f;
         while (t < gameOverTextFadeDuration)
