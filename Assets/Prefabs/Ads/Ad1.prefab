@@ -99,7 +99,7 @@ MonoBehaviour:
   driftDistance: 30
   directionChangeInterval: 0.6
   breathing: 0
-  breathingSpeed: 5
+  breathingSpeed: 2
   breathingStrength: 0.1
   rotating: 0
   rotationSpeed: 25
@@ -339,6 +339,7 @@ GameObject:
   - component: {fileID: 2349238497808411879}
   - component: {fileID: 1665638967103236882}
   - component: {fileID: 4542131676858866275}
+  - component: {fileID: 8669662695341673035}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -448,6 +449,19 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8669662695341673035
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6465774859060357498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b757d45d3ca498041b00cf941a0e6ed3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BigClickArea
+  extraSize: 60
 --- !u!1 &7800578160845941943
 GameObject:
   m_ObjectHideFlags: 0

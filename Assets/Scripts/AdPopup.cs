@@ -83,18 +83,26 @@ public class AdPopup : MonoBehaviour
     void Awake()
     {
         rt = GetComponent<RectTransform>();
-        baseScale = rt.localScale;
-        if (baseScale == Vector3.zero)
-            baseScale = Vector3.one;
+        // baseScale will be set in Start after the safenet has a chance to resize us
     }
+
 
     void Start()
     {
         if (closeButton != null)
             closeButton.onClick.AddListener(OnCloseClicked);
 
+        // make sure the popup is not absurdly big
         if (GameManager.Instance != null && rt != null)
+        {
+            GameManager.Instance.EnsurePopupFits(rt);
             GameManager.Instance.SnapPopupInside(rt);
+        }
+
+        // now that we've possibly scaled it, cache this as the "real" base scale
+        baseScale = rt.localScale;
+        if (baseScale == Vector3.zero)
+            baseScale = Vector3.one;
 
         // spawn tiny → grow
         rt.localScale = baseScale * spawnScale;
@@ -113,6 +121,7 @@ public class AdPopup : MonoBehaviour
             bombColorCached = true;
         }
     }
+
 
     void Update()
     {

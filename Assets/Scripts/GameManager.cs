@@ -338,6 +338,35 @@ public class GameManager : MonoBehaviour
         popupRt.anchoredPosition = pos;
     }
 
+    public void EnsurePopupFits(RectTransform popupRt)
+    {
+        if (popupArea == null || popupRt == null) return;
+
+        // parent (the XP screen) size
+        Rect parentRect = popupArea.rect;
+        float maxWidth  = parentRect.width  - 2f * spawnPadding;
+        float maxHeight = parentRect.height - 2f * spawnPadding;
+
+        // current popup size (local rect)
+        float w = popupRt.rect.width;
+        float h = popupRt.rect.height;
+
+        // already small enough? do nothing
+        if (w <= maxWidth && h <= maxHeight)
+            return;
+
+        // how much do we need to shrink by in each axis?
+        float scaleX = maxWidth  / w;
+        float scaleY = maxHeight / h;
+
+        // pick the smallest scale so it fits in both directions
+        float scale = Mathf.Min(scaleX, scaleY, 1f);
+
+        // apply the scale
+        popupRt.localScale *= scale;
+    }
+
+
     // ---------- visual FX ----------
 
     public void SpawnAdCloseFx(RectTransform source)

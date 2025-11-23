@@ -2730,7 +2730,7 @@ MonoBehaviour:
   powerClear: {fileID: 8532830817817927303, guid: 1b1462dd046fa764982022b0ed8a4395, type: 3}
   chanceFreeze: 0.5
   chanceCool: 0.35
-  chanceClear: 0.045
+  chanceClear: 0.105
   minSpeed: 300
   maxSpeed: 520
 --- !u!4 &2104849583
