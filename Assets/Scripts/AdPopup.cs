@@ -50,7 +50,7 @@ public class AdPopup : MonoBehaviour
     // ───── BOMB FLASHING ─────
     [Header("Bomb Flashing")]
     public bool bombFlash = true;
-    public Image bombFlashTarget;          // usually the background panel image
+    public Image bombFlashTarget;
     public Color bombFlashColor = Color.red;
     public float bombFlashSpeed = 6f;
 
@@ -88,7 +88,6 @@ public class AdPopup : MonoBehaviour
         if (GameManager.Instance != null && rt != null)
             GameManager.Instance.SnapPopupInside(rt);
 
-        // start small → grow
         rt.localScale = baseScale * spawnScale;
         isOpening = true;
         openTimer = 0f;
@@ -107,7 +106,6 @@ public class AdPopup : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
-        // auto despawn (bomb/cascade you ignore)
         if (autoDespawn && !isClosing)
         {
             lifeTimer += dt;
@@ -122,7 +120,6 @@ public class AdPopup : MonoBehaviour
             }
         }
 
-        // movement
         if (isMovingAd && !isClosing)
         {
             driftTimer += dt;
@@ -142,7 +139,6 @@ public class AdPopup : MonoBehaviour
                 GameManager.Instance.SnapPopupInside(rt);
         }
 
-        // run from cursor
         if (runFromCursor && !isClosing && GameManager.Instance != null)
         {
             Vector2 mouseLocal;
@@ -162,10 +158,8 @@ public class AdPopup : MonoBehaviour
             }
         }
 
-        // animations (scale + breathing)
         float scaleFactor = 1f;
 
-        // opening grow
         if (isOpening)
         {
             openTimer += dt;
@@ -178,7 +172,6 @@ public class AdPopup : MonoBehaviour
                 isOpening = false;
         }
 
-        // closing shrink
         if (isClosing)
         {
             closeTimer += dt;
@@ -196,7 +189,6 @@ public class AdPopup : MonoBehaviour
             }
         }
 
-        // breathing
         if (breathing && !isClosing)
         {
             float breathe = 1f + Mathf.Sin(Time.time * breathingSpeed) * breathingStrength;
@@ -205,13 +197,11 @@ public class AdPopup : MonoBehaviour
 
         rt.localScale = baseScale * scaleFactor;
 
-        // rotation
         if (rotating && !isClosing)
         {
             rt.Rotate(0f, 0f, rotationSpeed * dt);
         }
 
-        // bomb flashing
         if (bombFlash && adType == AdType.Bomb && bombFlashTarget != null && !isClosing)
         {
             if (!bombColorCached)
@@ -220,12 +210,11 @@ public class AdPopup : MonoBehaviour
                 bombColorCached = true;
             }
 
-            float t = (Mathf.Sin(Time.time * bombFlashSpeed) + 1f) * 0.5f; // 0..1
+            float t = (Mathf.Sin(Time.time * bombFlashSpeed) + 1f) * 0.5f;
             bombFlashTarget.color = Color.Lerp(bombBaseColor, bombFlashColor, t);
         }
         else if (bombFlashTarget != null && bombColorCached)
         {
-            // keep it at base color (for non-bombs or while closing)
             bombFlashTarget.color = bombBaseColor;
         }
     }
@@ -241,7 +230,7 @@ public class AdPopup : MonoBehaviour
         if (GameManager.Instance == null || isClosing)
             return;
 
-        // play close sound
+        // sound
         GameManager.Instance.PlayAdCloseSfx();
 
         Action cb = null;
@@ -251,11 +240,9 @@ public class AdPopup : MonoBehaviour
             case AdType.Normal:
                 cb = () => GameManager.Instance.OnPopupClosed(this);
                 break;
-
             case AdType.Bomb:
                 cb = () => GameManager.Instance.OnBombAdClicked(this);
                 break;
-
             case AdType.Cascade:
                 cb = () => GameManager.Instance.OnCascadeAdClosed(this);
                 break;
@@ -267,6 +254,10 @@ public class AdPopup : MonoBehaviour
     void StartClosing(Action callback)
     {
         if (isClosing) return;
+
+        // spawn particle FX at this ad's position
+        if (GameManager.Instance != null && rt != null)
+            GameManager.Instance.SpawnAdCloseFx(rt);
 
         isClosing = true;
         isOpening = false;

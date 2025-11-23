@@ -650,6 +650,7 @@ MonoBehaviour:
   shakeStartNormalized: 0.6
   shakeMaxAmplitude: 12
   overlayMaxAlpha: 0.45
+  adCloseFxPrefab: {fileID: 6244467085993409861, guid: 541c1c4add6835a4cac621cb0c6f2e87, type: 3}
   virusSfxSource: {fileID: 163846606}
   virusSpawnClips:
   - {fileID: 8300000, guid: 9175613af34a77f4a93acea4a5645a9d, type: 3}

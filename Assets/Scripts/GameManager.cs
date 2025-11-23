@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
-using Random = UnityEngine.Random;   // always use Unity's Random
+using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
 {
@@ -76,6 +76,10 @@ public class GameManager : MonoBehaviour
     [Range(0f, 1f)] public float overlayMaxAlpha = 0.45f;
 
     Vector2 shakeBasePos;
+
+    // ---------- VISUAL FX ----------
+    [Header("Visual FX")]
+    public GameObject adCloseFxPrefab;   // UI burst prefab
 
     // ---------- AUDIO ----------
     [Header("Audio")]
@@ -319,6 +323,17 @@ public class GameManager : MonoBehaviour
         pos.x = Mathf.Clamp(pos.x, -maxX, maxX);
         pos.y = Mathf.Clamp(pos.y, -maxY, maxY);
         popupRt.anchoredPosition = pos;
+    }
+
+    // ---------- visual FX spawn ----------
+    public void SpawnAdCloseFx(RectTransform source)
+    {
+        if (adCloseFxPrefab == null || popupArea == null || source == null) return;
+
+        GameObject fx = Instantiate(adCloseFxPrefab, popupArea);
+        RectTransform fxRt = fx.GetComponent<RectTransform>();
+        if (fxRt != null)
+            fxRt.anchoredPosition = source.anchoredPosition;
     }
 
     // ================== POPUP CALLBACKS ==================
