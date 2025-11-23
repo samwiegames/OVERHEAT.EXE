@@ -150,5 +150,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloatingTextUI
   tmpText: {fileID: 3392864788960690220}
-  moveDistance: 40
-  duration: 0.9
+  moveDistance: 30
+  duration: 1.6

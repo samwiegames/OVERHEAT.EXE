@@ -648,8 +648,8 @@ MonoBehaviour:
   clearAllTempBonus: 0
   heatOverlay: {fileID: 394815476}
   shakeRoot: {fileID: 86507703}
-  shakeStartNormalized: 0.6
-  shakeMaxAmplitude: 12
+  shakeStartNormalized: 0.824
+  shakeMaxAmplitude: 8
   overlayMaxAlpha: 0.45
   adCloseFxPrefab: {fileID: 6244467085993409861, guid: 541c1c4add6835a4cac621cb0c6f2e87, type: 3}
   floatingTextPrefab: {fileID: 5816166115748496584, guid: 275be86d9ca4e1544a4010967f005b78, type: 3}
@@ -2506,8 +2506,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -40, y: -40}
+  m_AnchoredPosition: {x: -5, y: -5}
+  m_SizeDelta: {x: -50, y: -50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1653601623
 GameObject:

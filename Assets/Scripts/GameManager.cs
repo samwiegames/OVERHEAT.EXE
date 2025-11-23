@@ -364,6 +364,26 @@ public class GameManager : MonoBehaviour
             ft.Setup(message, color);
     }
 
+    public void SpawnFloatingTextRandomInPopup(string message, Color color)
+    {
+        if (floatingTextPrefab == null || popupArea == null) return;
+
+        GameObject go = Instantiate(floatingTextPrefab, popupArea);
+        RectTransform rt = go.GetComponent<RectTransform>();
+
+        // random anchored position inside popupArea
+        Rect r = popupArea.rect;
+        float x = Random.Range(-r.width * 0.5f,  r.width * 0.5f);
+        float y = Random.Range(-r.height * 0.5f, r.height * 0.5f);
+
+        rt.anchoredPosition = new Vector2(x, y);
+
+        FloatingTextUI ft = go.GetComponent<FloatingTextUI>();
+        if (ft != null)
+            ft.Setup(message, color);
+    }
+
+
     public void ShowAdCoolingText(RectTransform source)
     {
         SpawnFloatingText(adCoolingText, source, adCoolingTextColor);
@@ -371,21 +391,19 @@ public class GameManager : MonoBehaviour
 
     public void ShowPowerupCoolingText()
     {
-        if (powerupTextAnchor != null)
-            SpawnFloatingText(powerupCoolingText, powerupTextAnchor, powerupCoolingColor);
+        SpawnFloatingTextRandomInPopup(powerupCoolingText, powerupCoolingColor);
     }
 
     public void ShowPowerupFreezeText()
     {
-        if (powerupTextAnchor != null)
-            SpawnFloatingText(powerupFreezeText, powerupTextAnchor, powerupFreezeColor);
+        SpawnFloatingTextRandomInPopup(powerupFreezeText, powerupFreezeColor);
     }
 
     public void ShowPowerupClearText()
     {
-        if (powerupTextAnchor != null)
-            SpawnFloatingText(powerupClearText, powerupTextAnchor, powerupClearColor);
+        SpawnFloatingTextRandomInPopup(powerupClearText, powerupClearColor);
     }
+
 
     // ================== POPUP CALLBACKS ==================
 
