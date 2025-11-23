@@ -2685,7 +2685,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 29.57, y: 69.1}
+  m_AnchoredPosition: {x: 29.57, y: 33.86}
   m_SizeDelta: {x: 800, y: 50}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1705837866
@@ -2708,10 +2708,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "INSTRUCTIONS!\n\nCLOSE POP UPS BY CLICKING ON THE RED 'X' BUTTON!\n\nOBJECTIVE:
-    KEEP THE SYSTEM FROM OVERHEATING AS LONG AS POSSIBLE\n\nCONTROLS: \n\n-> SPACEBAR
-    - COLLECT POWERUP\n-> 1 - USE COOL POWERUP\n-> 2 - USE FREEZE POWERUP\n-> 3 -
-    USE CLEANER POWERUP\n\n"
+  m_text: "INSTRUCTIONS!\n\nCLOSE POP UPS BY CLICKING ON THE RED 'X' BUTTON!\nDRAG
+    AND MOVE POP UPS BY HOLDING THE TASKBAR!\n\nOBJECTIVE: KEEP THE SYSTEM FROM OVERHEATING
+    AS LONG AS POSSIBLE.\n\nCONTROLS: \n\n-> SPACEBAR - COLLECT POWERUP\n-> 1 - USE
+    COOL POWERUP\n-> 2 - USE FREEZE POWERUP\n-> 3 - USE CLEANER POWERUP\n\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
   m_sharedMaterial: {fileID: -5328819892663423296, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
