@@ -46,6 +46,10 @@ public class GameManager : MonoBehaviour
     public TemperatureBar tempBar;
     public TMP_Text tempValueText;
 
+    [Header("Temp Graph")]
+    public TempGraph tempGraph;
+
+
     // ---------- SPAWNING ----------
     [Header("Spawning")]
     public float baseSpawnInterval = 1.2f;
@@ -512,14 +516,12 @@ public class GameManager : MonoBehaviour
         if (tempBar != null)
             tempBar.SetValue01(tNorm);
 
-        if (tempValueText != null)
-        {
-            float f = temp * 9f / 5f + 32f;
-            tempValueText.text = Mathf.RoundToInt(f) + "°F";
-        }
+        if (tempGraph != null)
+            tempGraph.SetChaos01(tNorm);
 
-        UpdateHeatVFX(tNorm);
+        // your tempValueText + heat overlay logic stays as it is
     }
+
 
     void UpdateHeatVFX(float tNorm)
     {

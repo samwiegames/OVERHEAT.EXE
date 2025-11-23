@@ -1,20 +1,37 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TemperatureBar : MonoBehaviour
 {
-    public RectTransform fillRect;
-    float fullHeight;
+    [Header("Fill")]
+    public RectTransform fillRect;   // child "Fill"
+    public Image fillImage;          // Image on Fill
 
-    void Start()
-    {
-        fullHeight = GetComponent<RectTransform>().rect.height - 8f; // minus padding
-    }
+    [Header("Color Gradient")]
+    public Gradient temperatureGradient; // blue -> orange -> red
 
-    public void SetValue01(float t) // t = 0..1
+    float currentValue = 0f; // 0..1
+
+    /// <summary>
+    /// called by GameManager with normalized temp 0..1
+    /// </summary>
+    public void SetValue01(float value01)
     {
-        t = Mathf.Clamp01(t);
-        Vector2 size = fillRect.sizeDelta;
-        size.y = fullHeight * t;
-        fillRect.sizeDelta = size;
+        currentValue = Mathf.Clamp01(value01);
+
+        // scale the fill vertically from the bottom
+        if (fillRect != null)
+        {
+            Vector3 scale = fillRect.localScale;
+            scale.y = Mathf.Max(0.0001f, currentValue); // avoid 0 scale
+            fillRect.localScale = scale;
+        }
+
+        // color from gradient
+        if (temperatureGradient != null && fillImage != null)
+        {
+            Color c = temperatureGradient.Evaluate(currentValue);
+            fillImage.color = c;
+        }
     }
 }
