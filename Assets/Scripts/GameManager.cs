@@ -135,6 +135,21 @@ public class GameManager : MonoBehaviour
     [Range(0f, 1f)] public float fanMinVolume = 0f;
     [Range(0f, 1f)] public float fanMaxVolume = 1f;
 
+    [Header("Virus Spawn SFX Tuning")]
+    [Range(0f, 1f)]
+    public float virusSpawnVolume = 0.35f;   // overall volume of spawn pings
+
+    [Tooltip("Minimum time between spawn sounds (seconds)")]
+    public float spawnSfxCooldown = 0.04f;
+
+    [Tooltip("Max spawn sounds allowed per frame (prevents cascade spam)")]
+    public int maxSpawnSfxPerFrame = 3;
+
+    float lastSpawnSfxTime = -999f;
+    int lastSpawnSfxFrame = -1;
+    int spawnSfxPlayedThisFrame = 0;
+
+
     // ---------- MUSIC & AMBIENCE ----------
     [Header("Music & Ambience")]
     [Tooltip("Looping background track")]
@@ -704,10 +719,33 @@ public class GameManager : MonoBehaviour
         if (virusSfxSource == null) return;
         if (virusSpawnClips == null || virusSpawnClips.Count == 0) return;
 
+        // reset per-frame counter
+        int frame = Time.frameCount;
+        if (frame != lastSpawnSfxFrame)
+        {
+            lastSpawnSfxFrame = frame;
+            spawnSfxPlayedThisFrame = 0;
+        }
+
+        // too many spawn sounds this frame? skip
+        if (spawnSfxPlayedThisFrame >= maxSpawnSfxPerFrame)
+            return;
+
+        // global cooldown so they don't spam over time
+        if (Time.time - lastSpawnSfxTime < spawnSfxCooldown)
+            return;
+
+        // pick a random spawn clip
         var clip = virusSpawnClips[Random.Range(0, virusSpawnClips.Count)];
-        if (clip != null)
-            virusSfxSource.PlayOneShot(clip);
+        if (clip == null) return;
+
+        // play quieter using volumeScale
+        virusSfxSource.PlayOneShot(clip, virusSpawnVolume);
+
+        lastSpawnSfxTime = Time.time;
+        spawnSfxPlayedThisFrame++;
     }
+
 
     public void PlayAdCloseSfx()
     {
