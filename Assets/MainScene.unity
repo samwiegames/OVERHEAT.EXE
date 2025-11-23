@@ -621,13 +621,13 @@ MonoBehaviour:
   - {fileID: 5845162529172167576, guid: d1ae358dab6c91445852c7f85ab51742, type: 3}
   - {fileID: 7414041518194056874, guid: a46739e5dd5afc646b34fdfa9d0175b2, type: 3}
   - {fileID: 5508281997540098215, guid: b6eb4e2800d6d1243b5a8364a9a36643, type: 3}
-  normalWeight: 1
+  normalWeight: 1.2
   bombWeight: 0.08
   cascadeWeight: 0.13
   movingChance: 0.203
   breathingChance: 0.342
   rotatingChance: 0.118
-  runAwayChance: 0.198
+  jumpingChance: 0.048
   timerText: {fileID: 779151637}
   bestText: {fileID: 1181408069}
   temp: 30
@@ -645,7 +645,7 @@ MonoBehaviour:
   gameOverText: {fileID: 117541403}
   freezeDurationSeconds: 6
   coolAmount: 18
-  clearAllTempBonus: 0
+  clearAllTempBonus: 5
   heatOverlay: {fileID: 394815476}
   shakeRoot: {fileID: 86507703}
   shakeStartNormalized: 0.824
@@ -653,11 +653,10 @@ MonoBehaviour:
   overlayMaxAlpha: 0.45
   adCloseFxPrefab: {fileID: 6244467085993409861, guid: 541c1c4add6835a4cac621cb0c6f2e87, type: 3}
   floatingTextPrefab: {fileID: 5816166115748496584, guid: 275be86d9ca4e1544a4010967f005b78, type: 3}
-  powerupTextAnchor: {fileID: 1653601624}
   adCoolingText: +2 cooling
   powerupCoolingText: +10 cooling
-  powerupFreezeText: temperature freeze
-  powerupClearText: clean all
+  powerupFreezeText: FREEZE!
+  powerupClearText: clear all :P
   adCoolingTextColor: {r: 0, g: 1, b: 1, a: 1}
   powerupCoolingColor: {r: 0, g: 1, b: 1, a: 1}
   powerupFreezeColor: {r: 0, g: 0, b: 1, a: 1}
@@ -2731,7 +2730,7 @@ MonoBehaviour:
   powerClear: {fileID: 8532830817817927303, guid: 1b1462dd046fa764982022b0ed8a4395, type: 3}
   chanceFreeze: 0.5
   chanceCool: 0.35
-  chanceClear: 0.15
+  chanceClear: 0.045
   minSpeed: 300
   maxSpeed: 520
 --- !u!4 &2104849583

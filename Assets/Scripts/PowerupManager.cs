@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 public class PowerupManager : MonoBehaviour
 {
@@ -17,8 +16,8 @@ public class PowerupManager : MonoBehaviour
 
     [Header("Spawn Chances")]
     [Range(0f,1f)] public float chanceFreeze = 0.5f;
-    [Range(0f,1f)] public float chanceCool = 0.35f;
-    [Range(0f,1f)] public float chanceClear = 0.15f;
+    [Range(0f,1f)] public float chanceCool   = 0.35f;
+    [Range(0f,1f)] public float chanceClear  = 0.15f;
 
     [Header("Movement")]
     public float minSpeed = 300f;
@@ -50,6 +49,7 @@ public class PowerupManager : MonoBehaviour
 
         currentRT.anchoredPosition += Vector2.left * speed * Time.deltaTime;
 
+        // off the left side
         if (currentRT.anchoredPosition.x < -powerupBar.rect.width / 2f - 60f)
         {
             EndIcon(false);
@@ -97,7 +97,8 @@ public class PowerupManager : MonoBehaviour
     void EndIcon(bool triggered)
     {
         active = false;
-        Destroy(currentIcon);
+        if (currentIcon != null)
+            Destroy(currentIcon);
     }
 
     void ApplyPowerup(string name)
@@ -106,19 +107,16 @@ public class PowerupManager : MonoBehaviour
 
         if (name.Contains("Freeze"))
         {
-            // freeze temperature for 6 seconds
             GameManager.Instance.ApplyFreezePowerup(6f);
         }
         else if (name.Contains("Cool"))
         {
-            // instantly cool by 18 degrees (tweak if you want)
             GameManager.Instance.ApplyCoolPowerup(18f);
         }
         else if (name.Contains("Clear"))
         {
-            // clear all ads + reset difficulty
+            // clear-all: wipe screen + cool, but *no* spawn-speed reset
             GameManager.Instance.ApplyClearAllPowerup();
         }
     }
-
 }

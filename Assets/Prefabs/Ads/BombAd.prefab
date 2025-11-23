@@ -375,9 +375,10 @@ MonoBehaviour:
   breathingStrength: 0.05
   rotating: 0
   rotationSpeed: 25
-  runFromCursor: 0
-  runSpeed: 200
-  cursorRunDistance: 110
+  jumping: 0
+  jumpIntervalMin: 0.8
+  jumpIntervalMax: 1.8
+  jumpDistance: 25
   spawnScale: 0.2
   openDuration: 0.18
   closeDuration: 0.16

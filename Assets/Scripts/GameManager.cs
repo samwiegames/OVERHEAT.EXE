@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
     [Range(0f, 1f)] public float movingChance    = 0.18f;
     [Range(0f, 1f)] public float breathingChance = 0.30f;
     [Range(0f, 1f)] public float rotatingChance  = 0.18f;
-    [Range(0f, 1f)] public float runAwayChance   = 0.10f;
+    [Range(0f, 1f)] public float jumpingChance   = 0.15f;
 
     // ---------- TIMER UI ----------
     [Header("Timer UI")]
@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
     public float tempMax = 100f;
     public float baseTempIncreasePerSecond = 1.5f;
     public float tempPerOpenAd = 0.15f;
-    public float tempOnAdClose = -1f;
+    public float tempOnAdClose = -2f; // matches "+2 cooling" text
 
     [Header("Temperature UI")]
     public TemperatureBar tempBar;
@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviour
     [Header("Powerup Settings")]
     public float freezeDurationSeconds = 6f;
     public float coolAmount = 18f;
-    public float clearAllTempBonus = 0f;
+    public float clearAllTempBonus = 25f;   // how much clear-all cools (°C)
 
     bool tempFrozen = false;
     float freezeTimer = 0f;
@@ -81,7 +81,6 @@ public class GameManager : MonoBehaviour
     [Header("Visual FX")]
     public GameObject adCloseFxPrefab;        // square burst prefab
     public GameObject floatingTextPrefab;     // FloatingTextUI prefab
-    public RectTransform powerupTextAnchor;   // where powerup text appears (bottom bar)
 
     [Header("Floating Text Strings")]
     public string adCoolingText       = "+2 cooling";
@@ -279,8 +278,8 @@ public class GameManager : MonoBehaviour
                     popup.breathing = true;
                 if (Random.value < rotatingChance)
                     popup.rotating = true;
-                if (Random.value < runAwayChance)
-                    popup.runFromCursor = true;
+                if (Random.value < jumpingChance)
+                    popup.jumping = true;
             }
 
             activeAds.Add(popup);
@@ -371,18 +370,15 @@ public class GameManager : MonoBehaviour
         GameObject go = Instantiate(floatingTextPrefab, popupArea);
         RectTransform rt = go.GetComponent<RectTransform>();
 
-        // random anchored position inside popupArea
         Rect r = popupArea.rect;
         float x = Random.Range(-r.width * 0.5f,  r.width * 0.5f);
         float y = Random.Range(-r.height * 0.5f, r.height * 0.5f);
-
         rt.anchoredPosition = new Vector2(x, y);
 
         FloatingTextUI ft = go.GetComponent<FloatingTextUI>();
         if (ft != null)
             ft.Setup(message, color);
     }
-
 
     public void ShowAdCoolingText(RectTransform source)
     {
@@ -403,7 +399,6 @@ public class GameManager : MonoBehaviour
     {
         SpawnFloatingTextRandomInPopup(powerupClearText, powerupClearColor);
     }
-
 
     // ================== POPUP CALLBACKS ==================
 
@@ -557,14 +552,15 @@ public class GameManager : MonoBehaviour
 
     public void ApplyClearAllPowerup()
     {
+        // 1) wipe the screen
         foreach (var ad in activeAds)
+        {
             if (ad != null)
                 Destroy(ad.gameObject);
-
+        }
         activeAds.Clear();
-        spawnDifficultyTime = 0f;
-        spawnTimer = 0f;
 
+        // 2) COOL the PC a chunk (no spawn reset)
         if (clearAllTempBonus > 0f)
         {
             temp -= clearAllTempBonus;

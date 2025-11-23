@@ -91,6 +91,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AdPopup
   closeButton: {fileID: 4542131676858866275}
+  adType: 0
+  autoDespawn: 0
+  autoDespawnTime: 6
+  isMovingAd: 0
+  moveSpeed: 60
+  driftDistance: 30
+  directionChangeInterval: 0.6
+  breathing: 0
+  breathingSpeed: 5
+  breathingStrength: 0.1
+  rotating: 0
+  rotationSpeed: 25
+  jumping: 0
+  jumpIntervalMin: 0.8
+  jumpIntervalMax: 1.8
+  jumpDistance: 40
+  spawnScale: 0.2
+  openDuration: 0.18
+  closeDuration: 0.16
+  bombFlash: 1
+  bombFlashTarget: {fileID: 0}
+  bombFlashColor: {r: 1, g: 0, b: 0, a: 1}
+  bombFlashSpeed: 6
 --- !u!1 &1842144858888716518
 GameObject:
   m_ObjectHideFlags: 0
