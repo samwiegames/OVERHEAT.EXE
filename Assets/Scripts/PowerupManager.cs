@@ -7,8 +7,8 @@ public class PowerupManager : MonoBehaviour
 
     [Header("UI")]
     public RectTransform powerupBar;   // the bar across the bottom
-    public RectTransform hitZone;     // the central box
-    public Transform moverParent;     // parent for moving icon (PowerupMover)
+    public RectTransform hitZone;      // the central box
+    public Transform moverParent;      // parent for moving icon (PowerupMover)
 
     [Header("Prefabs")]
     public GameObject powerFreeze;
@@ -46,6 +46,12 @@ public class PowerupManager : MonoBehaviour
     public AudioClip freezeClip;
     public AudioClip clearClip;
 
+    [Header("Hit Zone Feedback")]
+    public GameObject hitZonePulsePrefab;   // the ghost / clone of the hit zone
+    public Transform hitZonePulseParent;    // usually same parent as HitZone
+    public AudioSource hitZoneAudioSource;  // audio source for tap sound
+    public AudioClip hitZoneTapClip;        // sound played on every space press
+
     GameObject currentIcon;
     RectTransform currentRT;
     CanvasGroup currentCG;
@@ -73,6 +79,10 @@ public class PowerupManager : MonoBehaviour
 
     void Update()
     {
+        // stop powerup lane after game over
+        if (GameManager.Instance != null && GameManager.Instance.IsGameOver)
+            return;
+
         if (!active)
         {
             spawnTimer += Time.deltaTime;
@@ -100,14 +110,16 @@ public class PowerupManager : MonoBehaviour
             // missed automatically & went off the left side -> fade out and clean up
             if (x <= endX)
             {
-                // simple auto-miss without spacebar -> just end
                 EndIcon(false);
                 return;
             }
 
             // catch attempt
             if (Input.GetKeyDown(KeyCode.Space))
+            {
+                PlayHitZoneFeedback();   // NEW: visual + audio feedback
                 CheckCatch();
+            }
         }
     }
 
@@ -228,12 +240,72 @@ public class PowerupManager : MonoBehaviour
         fx.transform.position = hitZone.transform.position;
     }
 
+    // ─────────────────────────────────────────────
+    // NEW: visual + audio feedback for space press
+    // ─────────────────────────────────────────────
+    void PlayHitZoneFeedback()
+    {
+        // sound
+        if (hitZoneAudioSource != null && hitZoneTapClip != null)
+        {
+            hitZoneAudioSource.PlayOneShot(hitZoneTapClip);
+        }
 
+        // visual ripple
+        if (hitZonePulsePrefab == null || hitZone == null) return;
+
+        Transform parent = hitZonePulseParent != null ? hitZonePulseParent : hitZone.parent;
+        GameObject clone = Instantiate(hitZonePulsePrefab, parent);
+
+        RectTransform cloneRT = clone.GetComponent<RectTransform>();
+        if (cloneRT != null)
+        {
+            // match position & scale
+            cloneRT.position   = hitZone.position;
+            cloneRT.localScale = hitZone.localScale;
+        }
+
+        CanvasGroup cg = clone.GetComponent<CanvasGroup>();
+        if (cg == null) cg = clone.AddComponent<CanvasGroup>();
+
+        StartCoroutine(HitZonePulseRoutine(cloneRT, cg));
+    }
+
+    System.Collections.IEnumerator HitZonePulseRoutine(RectTransform rt, CanvasGroup cg)
+    {
+        if (rt == null || cg == null)
+        {
+            if (rt != null) Destroy(rt.gameObject);
+            yield break;
+        }
+
+        float duration = 0.25f;
+        float t = 0f;
+
+        Vector3 startScale = rt.localScale;
+        Vector3 endScale   = startScale * 1.6f;
+
+        float startAlpha = 0.7f;
+
+        cg.alpha = startAlpha;
+
+        // use unscaled time so it still animates even if Time.timeScale = 0
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = t / duration;
+
+            rt.localScale = Vector3.Lerp(startScale, endScale, k);
+            cg.alpha      = Mathf.Lerp(startAlpha, 0f, k);
+
+            yield return null;
+        }
+
+        Destroy(rt.gameObject);
+    }
 
     // ─────────────────────────────────────────────
     // FADE LOGIC – based purely on X position
-    // fades in near right edge, full opacity around centre,
-    // fades out as it exits left if you never press space.
     // ─────────────────────────────────────────────
     void UpdateFadeForPosition(float x)
     {
@@ -313,7 +385,6 @@ public class PowerupManager : MonoBehaviour
         // stop rotation/movement; we just sit there and pulse
         Vector3 startScale = currentRT.localScale;
         Vector3 endScale   = startScale * 1.4f;
-
         float startAlpha = currentCG.alpha <= 0f ? 1f : currentCG.alpha;
         float duration   = 0.4f;
         float t = 0f;
