@@ -3261,7 +3261,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 59.9, y: 70.87}
+  m_SizeDelta: {x: 50.62, y: 70.87}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1673440849
 MonoBehaviour:
@@ -3677,6 +3677,11 @@ MonoBehaviour:
   chanceClear: 0.105
   minSpeed: 300
   maxSpeed: 520
+  minDelay: 4
+  maxDelay: 11
+  rotateIcon: 1
+  rotateSpeed: 220
+  edgeFadeFraction: 0.112
 --- !u!4 &2104849583
 Transform:
   m_ObjectHideFlags: 0
