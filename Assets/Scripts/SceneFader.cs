@@ -32,22 +32,7 @@ public class SceneFader : MonoBehaviour
         cg.blocksRaycasts = false;
     }
 
-    void OnEnable()
-    {
-        // subscribe to sceneLoaded so every new scene fades in automatically
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    void OnDisable()
-    {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        // when a scene loads, fade from black → clear
-        StartCoroutine(FadeIn());
-    }
+    
 
     // ---------- PUBLIC API ----------
 
@@ -104,6 +89,7 @@ public class SceneFader : MonoBehaviour
         isFading = true;
         cg.blocksRaycasts = true;
 
+        // 1) fade to black
         float t = 0f;
         float start = cg.alpha;
         float end = 1f;   // fully black
@@ -118,14 +104,19 @@ public class SceneFader : MonoBehaviour
 
         cg.alpha = 1f;
 
-        // make sure time is running normally in the new scene
-        Time.timeScale = 1f;
+        // 2) load the new scene
+        Time.timeScale = 1f; // just in case
+        var op = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName);
+        // allow activation immediately
+        op.allowSceneActivation = true;
 
-        SceneManager.LoadScene(sceneName);
-        // FadeIn will be called automatically by OnSceneLoaded
+        while (!op.isDone)
+            yield return null;
 
-        // we leave isFading true until FadeIn finishes
+        // 3) fade back in on the *new* scene
+        yield return StartCoroutine(FadeIn());
     }
+
 
     IEnumerator FadeOutThenQuit()
     {
