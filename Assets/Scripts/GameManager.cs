@@ -48,6 +48,12 @@ public class GameManager : MonoBehaviour
     public TemperatureBar tempBar;
     public TMP_Text tempValueText;
 
+    [Header("Overlay Behavior")]
+    public float overlayRecoverySpeed = 2.2f; // higher = faster return to normal (units per second)
+    float previousHeatValue = 0f;
+
+
+
     // ---------- SPAWNING ----------
     [Header("Spawning")]
     public float baseSpawnInterval = 1.2f;
@@ -628,8 +634,25 @@ public class GameManager : MonoBehaviour
         GameObject fx = Instantiate(adCloseFxPrefab, popupArea);
         RectTransform fxRt = fx.GetComponent<RectTransform>();
         if (fxRt != null)
+        {
+            // position match
             fxRt.anchoredPosition = source.anchoredPosition;
+
+            // match sibling index so fx renders at the same depth as source
+            int sourceIndex = source.GetSiblingIndex();
+            // put particle directly above the source so it's visible, but still grouped correctly
+            fxRt.SetSiblingIndex(Mathf.Min(sourceIndex + 1, popupArea.childCount - 1));
+        }
+
+        // if this particle system uses a ParticleSystemRenderer, also set sorting order fallback:
+        var psRenderer = fx.GetComponentInChildren<ParticleSystemRenderer>();
+        if (psRenderer != null)
+        {
+            // 0 = default; make it slightly higher than default so it shows above the source
+            psRenderer.sortingOrder = source.GetSiblingIndex() + 1;
+        }
     }
+
 
     public void SpawnFloatingText(string message, RectTransform source, Color color)
     {
@@ -638,6 +661,18 @@ public class GameManager : MonoBehaviour
         GameObject go = Instantiate(floatingTextPrefab, popupArea);
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.anchoredPosition = source.anchoredPosition;
+
+        // make sure floating text is on top of the popup canvas (drawn last)
+        rt.SetAsLastSibling();
+
+        // ensure it doesn't block pointer events
+        var cg = go.GetComponent<CanvasGroup>();
+        if (cg == null) cg = go.AddComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+
+        // disable raycast on any TMP/Graphic inside
+        var tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
+        if (tmp != null) tmp.raycastTarget = false;
 
         FloatingTextUI ft = go.GetComponent<FloatingTextUI>();
         if (ft != null)
@@ -656,10 +691,22 @@ public class GameManager : MonoBehaviour
         float y = Random.Range(-r.height * 0.5f, r.height * 0.5f);
         rt.anchoredPosition = new Vector2(x, y);
 
+        // always ensure floating text is on top
+        rt.SetAsLastSibling();
+
+        // ensure it doesn't block clicks
+        var cg = go.GetComponent<CanvasGroup>();
+        if (cg == null) cg = go.AddComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+
+        var tmp = go.GetComponentInChildren<TMPro.TMP_Text>();
+        if (tmp != null) tmp.raycastTarget = false;
+
         FloatingTextUI ft = go.GetComponent<FloatingTextUI>();
         if (ft != null)
             ft.Setup(message, color);
     }
+
 
     public void ShowAdCoolingText(RectTransform source)
     {
@@ -770,47 +817,37 @@ public class GameManager : MonoBehaviour
         UpdateHeatVFX(tNorm);
     }
 
+    // replace the entire UpdateHeatVFX method with the code below
     void UpdateHeatVFX(float tNorm)
     {
-        float heat01 = Mathf.InverseLerp(shakeStartNormalized, 1f, tNorm);
-        heat01 = Mathf.Clamp01(heat01);
+        // how intense the heat SHOULD be (target value)
+        float targetHeat = Mathf.InverseLerp(shakeStartNormalized, 1f, tNorm);
+        targetHeat = Mathf.Clamp01(targetHeat);
 
+        // smooth current overlay intensity
+        // previousHeatValue is a field used to lerp the overlay back to normal smoothly
+        float heat01 = Mathf.Lerp(previousHeatValue, targetHeat, Time.deltaTime * 4f);
+        previousHeatValue = heat01;
+
+        // --- overlay opacity ---
         if (heatOverlay != null)
         {
-            // base intensity (much lower now)
-            float baseA = overlayMaxAlpha * heat01 * 0.35f; 
-            // 0.35f = makes everything ~65% weaker immediately
-
-            // pulsing
-            float pulse = 1f;
-            if (tNorm > shakeStartNormalized)
-            {
-                float pulseSpeed = 2f;
-                float pulseStrength = 0.15f; 
-                // 0.15f = weaker pulsing, but still visible
-                pulse = 1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseStrength;
-            }
-
-            float finalAlpha = baseA * pulse;
-
-            // hard-cap no matter what
-            finalAlpha = Mathf.Clamp(finalAlpha, 0f, 0.18f);
-
             Color c = heatOverlay.color;
-            c.a = finalAlpha;
+            c.a = overlayMaxAlpha * heat01;
             heatOverlay.color = c;
         }
 
-
-
+        // --- shaking ---
         if (shakeRoot != null)
         {
             Vector2 randomOffset = Random.insideUnitCircle * (shakeMaxAmplitude * heat01);
             shakeRoot.anchoredPosition = shakeBasePos + randomOffset;
         }
 
+        // update fan using the smoothed intensity
         UpdateFanVolume(heat01);
     }
+
 
     // ================== AUDIO ==================
 
