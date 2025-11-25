@@ -3256,7 +3256,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: overheat.exe
+  m_text: OVERHEAT.EXE
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}
   m_sharedMaterial: {fileID: -5328819892663423296, guid: 83665b7e145fee94fa5bba25d14e6f63, type: 2}

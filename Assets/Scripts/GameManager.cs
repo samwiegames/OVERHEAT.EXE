@@ -102,7 +102,8 @@ public class GameManager : MonoBehaviour
     public RectTransform shakeRoot;
     [Range(0f, 1f)] public float shakeStartNormalized = 0.6f;
     public float shakeMaxAmplitude = 12f;
-    [Range(0f, 1f)] public float overlayMaxAlpha = 0.45f;
+    [Range(0f, 1f)] public float overlayMaxAlpha = 0.25f;
+
 
     Vector2 shakeBasePos;
 
@@ -247,6 +248,8 @@ public class GameManager : MonoBehaviour
     public float gameOverTextFadeDuration = 1.2f;
 
     // hover vars for game over texts + buttons
+
+    public float adCloseVolume = 1.2f;
     float gameOverHoverTimer = 0f;
     Vector2 gameOverTitleBasePos;
     Vector2 gameOverSurvivedBasePos;
@@ -774,10 +777,31 @@ public class GameManager : MonoBehaviour
 
         if (heatOverlay != null)
         {
+            // base intensity (much lower now)
+            float baseA = overlayMaxAlpha * heat01 * 0.35f; 
+            // 0.35f = makes everything ~65% weaker immediately
+
+            // pulsing
+            float pulse = 1f;
+            if (tNorm > shakeStartNormalized)
+            {
+                float pulseSpeed = 2f;
+                float pulseStrength = 0.15f; 
+                // 0.15f = weaker pulsing, but still visible
+                pulse = 1f + Mathf.Sin(Time.unscaledTime * pulseSpeed) * pulseStrength;
+            }
+
+            float finalAlpha = baseA * pulse;
+
+            // hard-cap no matter what
+            finalAlpha = Mathf.Clamp(finalAlpha, 0f, 0.18f);
+
             Color c = heatOverlay.color;
-            c.a = overlayMaxAlpha * heat01;
+            c.a = finalAlpha;
             heatOverlay.color = c;
         }
+
+
 
         if (shakeRoot != null)
         {
@@ -839,7 +863,7 @@ public class GameManager : MonoBehaviour
 
         var clip = adCloseClips[Random.Range(0, adCloseClips.Count)];
         if (clip != null)
-            virusSfxSource.PlayOneShot(clip);
+            virusSfxSource.PlayOneShot(clip, adCloseVolume);
     }
 
     void UpdateFanVolume(float heat01)
@@ -1092,14 +1116,14 @@ public class GameManager : MonoBehaviour
         {
             gameOverTitleText.text = reason;
             var rt = gameOverTitleText.rectTransform;
-            gameOverTitleBasePos = rt.anchoredPosition + new Vector2(0f, 70f);
+            gameOverTitleBasePos = rt.anchoredPosition + new Vector2(0f, 180f);
         }
 
         if (gameOverSurvivedText != null)
         {
             gameOverSurvivedText.text = "survived: " + FormatTime(elapsedTime);
             var rt = gameOverSurvivedText.rectTransform;
-            gameOverSurvivedBasePos = rt.anchoredPosition + new Vector2(0f, -30f);
+            gameOverSurvivedBasePos = rt.anchoredPosition + new Vector2(0f, 50f);
         }
 
 
@@ -1110,7 +1134,7 @@ public class GameManager : MonoBehaviour
 
             RectTransform rt = restartButton.GetComponent<RectTransform>();
             if (rt != null)
-                rt.anchoredPosition = new Vector2(0f, -200f);
+                rt.anchoredPosition = new Vector2(0f, -150f);
 
             if (restartButton.transform.localScale == Vector3.zero)
                 restartButton.transform.localScale = Vector3.one;
@@ -1119,7 +1143,7 @@ public class GameManager : MonoBehaviour
         }
 
         // menu button (a bit under restart)
-        Vector2 menuPos = new Vector2(0f, -300f);
+        Vector2 menuPos = new Vector2(0f, -260f);
 
         if (menuButton != null)
         {
