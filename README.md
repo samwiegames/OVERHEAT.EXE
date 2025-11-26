@@ -1,0 +1,10 @@
+my first game jam project.
+
+mini jam 198
+
+game submission - OVERHEAT.EXE
+by samwie.
+
+try out the game here!
+
+itch io - https://samwie.itch.io/overheatexe
