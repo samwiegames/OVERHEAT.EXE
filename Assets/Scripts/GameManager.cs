@@ -357,6 +357,11 @@ public class GameManager : MonoBehaviour
                 ambienceSource.Play();
         }
 
+        if (PlayerPrefs.GetInt("TUTORIAL_DONE", 0) == 0)
+        {
+            SpawnPopup(); // at least one ad
+        }
+
         RebuildAdTypeLists();
         UpdateTempUI();
         UpdatePowerupUI();
@@ -407,6 +412,11 @@ public class GameManager : MonoBehaviour
 
         if (timerText != null)
             timerText.text = "time: " + FormatTime(elapsedTime);
+
+
+        float s = 1f + Mathf.Sin(Time.unscaledTime * 3f) * 0.05f;
+        highlightBox.localScale = Vector3.one * s;
+
 
         HandleSpawning(dt);
         HandleTemperature(dt);
@@ -1215,7 +1225,7 @@ public class GameManager : MonoBehaviour
         StartGameOverLoopAudio();
 
         // 5) finally, hard freeze everything (hover uses unscaled time)
-        Time.timeScale = 0f;
+        Time.timeScale = 0.1f;
     }
 
     void StartGameOverLoopAudio()
